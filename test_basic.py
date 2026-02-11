@@ -28,6 +28,31 @@ def test_models():
     except Exception as e:
         print(f"✗ Puzzle validation failed: {e}")
         return False
+
+    # Accept label-only correct answers when options are labeled "A: ..."
+    labeled_data = {
+        "id": "test_002",
+        "puzzle_type": "matrix_reasoning",
+        "difficulty": 6,
+        "question_text": "Find the missing piece",
+        "grid_logic": "row1: circle, square, triangle; row2: filled-circle, filled-square, filled-triangle; row3: large-circle, large-square, ?; rule: test",
+        "options": [
+            "A: large-triangle",
+            "B: small-triangle",
+            "C: filled-square",
+            "D: square",
+            "E: circle",
+        ],
+        "correct_answer": "A",
+        "explanation": "Test explanation"
+    }
+    try:
+        puzzle = validate_puzzle(labeled_data)
+        assert puzzle.correct_answer == "A: large-triangle"
+        print("✓ Label-only correct_answer normalization works")
+    except Exception as e:
+        print(f"✗ Label-only correct_answer normalization failed: {e}")
+        return False
     
     # Test schema
     schema = get_puzzle_schema()

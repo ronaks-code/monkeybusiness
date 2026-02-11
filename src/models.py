@@ -10,6 +10,16 @@ MAX_OPTIONS = 8
 OPTION_LABELS = ["A", "B", "C", "D", "E", "F", "G", "H"]
 
 
+def _extract_option_label(option: str) -> str:
+    """Extract option label from strings like 'A: foo'."""
+    if not isinstance(option, str):
+        return ""
+    prefix = option.split(":", 1)[0].strip().upper()
+    if len(prefix) == 1 and prefix in OPTION_LABELS:
+        return prefix
+    return ""
+
+
 @dataclass
 class Puzzle:
     """Represents a single Raven-style puzzle with metadata.
@@ -77,11 +87,36 @@ def validate_puzzle(data: dict) -> Puzzle:
     if not isinstance(options, list) or not (MIN_OPTIONS <= len(options) <= MAX_OPTIONS):
         n = len(options) if isinstance(options, list) else 0
         raise ValueError(f"Options must be a list of {MIN_OPTIONS}-{MAX_OPTIONS} items, got: {n}")
+    for idx, option in enumerate(options):
+        if not isinstance(option, str) or not option.strip():
+            raise ValueError(f"Option {idx + 1} must be a non-empty string")
     
-    # Validate correct_answer is in options
+    # Validate/normalize correct_answer.
+    # Accept either exact option string, or label-only answers like "A" when
+    # options are in "A: ..." format.
     correct_answer = data["correct_answer"]
-    if correct_answer not in options:
-        raise ValueError(f"correct_answer '{correct_answer}' not found in options: {options}")
+    if not isinstance(correct_answer, str) or not correct_answer.strip():
+        raise ValueError("Field 'correct_answer' must be a non-empty string")
+
+    normalized_correct_answer = correct_answer.strip()
+    if normalized_correct_answer not in options:
+        label_to_option = {}
+        for option in options:
+            label = _extract_option_label(option)
+            if label and label not in label_to_option:
+                label_to_option[label] = option
+
+        answer_label = _extract_option_label(normalized_correct_answer)
+        if not answer_label:
+            upper = normalized_correct_answer.upper()
+            if len(upper) == 1 and upper in OPTION_LABELS:
+                answer_label = upper
+
+        mapped = label_to_option.get(answer_label)
+        if mapped:
+            normalized_correct_answer = mapped
+        else:
+            raise ValueError(f"correct_answer '{correct_answer}' not found in options: {options}")
     
     # Validate string fields are not empty
     string_fields = ["id", "question_text", "grid_logic", "explanation"]
@@ -97,7 +132,7 @@ def validate_puzzle(data: dict) -> Puzzle:
         question_text=data["question_text"],
         grid_logic=data["grid_logic"],
         options=data["options"],
-        correct_answer=data["correct_answer"],
+        correct_answer=normalized_correct_answer,
         explanation=data["explanation"]
     )
 
