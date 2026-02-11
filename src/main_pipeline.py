@@ -140,16 +140,18 @@ def run_pipeline(
             
             # Build video
             logger.info(f"  Building video...")
+            final_video_path = asset_manager.get_video_path(puzzle.id)
             video_path = video_builder.build_video(
                 puzzle_id=puzzle.id,
                 puzzle_image_path=image_path,
                 answer=puzzle.correct_answer,
                 explanation=puzzle.explanation,
-                question_text=puzzle.question_text
+                question_text=puzzle.question_text,
+                output_path=final_video_path
             )
-            
-            # Save video to output directory
-            final_video_path = asset_manager.save_video(puzzle.id, video_path)
+
+            # Build wrote directly to output/videos; keep this assignment explicit.
+            final_video_path = Path(video_path)
             stats.videos_created += 1
             logger.info(f"  Video saved: {final_video_path}")
             
