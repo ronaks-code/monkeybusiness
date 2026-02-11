@@ -2,6 +2,7 @@
 
 import json
 import shutil
+import re
 from pathlib import Path
 from typing import Union, Optional
 from datetime import datetime
@@ -44,6 +45,23 @@ class AssetManager:
         """
         # Replace any non-alphanumeric characters with underscores
         return "".join(c if c.isalnum() or c in ["-", "_"] else "_" for c in puzzle_id)
+
+    def get_next_puzzle_index(self) -> int:
+        """Return the next available numeric puzzle index.
+
+        Scans images/videos/metadata for files named puzzle_<N>.<ext> and
+        returns max(N)+1. If none exist, returns 1.
+        """
+        pattern = re.compile(r"^puzzle_(\d+)$")
+        max_index = 0
+
+        for directory in [self.images_dir, self.videos_dir, self.metadata_dir]:
+            for path in directory.glob("puzzle_*"):
+                match = pattern.match(path.stem)
+                if match:
+                    max_index = max(max_index, int(match.group(1)))
+
+        return max_index + 1
     
     def save_image(self, puzzle_id: str, image: Union[Image.Image, Path, str]) -> Path:
         """Save puzzle image.

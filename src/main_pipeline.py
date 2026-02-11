@@ -77,6 +77,8 @@ def run_pipeline(
     asset_manager = AssetManager(output_dir)
     generator = PuzzleGenerator()
     renderer = PuzzleRenderer()
+    start_index = asset_manager.get_next_puzzle_index()
+    logger.info(f"Starting puzzle IDs at puzzle_{start_index:03d}")
     
     if not skip_video:
         video_builder = VideoBuilder()
@@ -105,7 +107,11 @@ def run_pipeline(
     
     # Generate puzzles
     logger.info(f"Generating {count} puzzles...")
-    puzzles = generator.generate_puzzles(count, start_difficulty=start_difficulty)
+    puzzles = generator.generate_puzzles(
+        count,
+        start_difficulty=start_difficulty,
+        start_index=start_index
+    )
     stats.generated = len(puzzles)
     
     if not puzzles:

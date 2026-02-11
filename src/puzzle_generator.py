@@ -160,16 +160,25 @@ Return ONLY the JSON object, no additional text or markdown."""
         logger.error(f"Failed to generate valid puzzle after {self.max_retries} attempts")
         return None
     
-    def generate_puzzles(self, count: int, start_difficulty: Optional[int] = None) -> List[Puzzle]:
+    def generate_puzzles(
+        self,
+        count: int,
+        start_difficulty: Optional[int] = None,
+        start_index: int = 1
+    ) -> List[Puzzle]:
         """Generate multiple puzzles.
         
         Args:
             count: Number of puzzles to generate
             start_difficulty: Starting difficulty (increments for each puzzle)
+            start_index: Numeric index for the first generated puzzle ID
             
         Returns:
             List of successfully generated Puzzle objects
         """
+        if start_index < 1:
+            raise ValueError(f"start_index must be >= 1, got: {start_index}")
+
         puzzles = []
         
         for i in range(count):
@@ -180,7 +189,7 @@ Return ONLY the JSON object, no additional text or markdown."""
                 difficulty = None  # Let generate_puzzle choose randomly
             
             # Generate puzzle ID
-            puzzle_id = f"puzzle_{i+1:03d}"
+            puzzle_id = f"puzzle_{start_index + i:03d}"
             
             try:
                 puzzle = self.generate_puzzle(difficulty=difficulty, puzzle_id=puzzle_id)

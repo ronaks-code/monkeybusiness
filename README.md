@@ -86,6 +86,8 @@ Generate multiple videos:
 python -m src.main_pipeline --count 10
 ```
 
+Puzzle IDs auto-increment from existing output files, so new runs append (for example, `puzzle_021`, `puzzle_022`) instead of overwriting earlier assets.
+
 ### Advanced Options
 
 ```bash

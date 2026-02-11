@@ -80,6 +80,8 @@ This will create:
 python -m src.main_pipeline --count 10
 ```
 
+Puzzle IDs auto-increment from existing output files, so repeated runs append new IDs instead of overwriting previous outputs.
+
 ### Generate with specific difficulty
 
 ```bash

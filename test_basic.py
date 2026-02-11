@@ -83,12 +83,50 @@ def test_asset_manager():
             )
             metadata_path = manager.save_metadata("test_meta", test_puzzle)
             assert metadata_path.exists()
+
+            # Test next-index detection across output folders
+            (Path(tmpdir) / "images" / "puzzle_002.png").touch()
+            (Path(tmpdir) / "videos" / "puzzle_010.mp4").touch()
+            (Path(tmpdir) / "metadata" / "puzzle_007.json").touch()
+            assert manager.get_next_puzzle_index() == 11
             
             print("✓ Asset manager works")
     except Exception as e:
         print(f"✗ Asset manager failed: {e}")
         return False
     
+    return True
+
+def test_puzzle_id_sequencing():
+    """Test generator ID sequencing with custom start index."""
+    print("\nTesting puzzle ID sequencing...")
+    import types
+    from src.puzzle_generator import PuzzleGenerator
+    from src.models import Puzzle
+
+    try:
+        generator = PuzzleGenerator.__new__(PuzzleGenerator)
+
+        def fake_generate_puzzle(self, difficulty=None, puzzle_id=None):
+            return Puzzle(
+                id=puzzle_id or "puzzle_001",
+                puzzle_type="matrix_reasoning",
+                difficulty=difficulty if isinstance(difficulty, int) else 5,
+                question_text="Test",
+                grid_logic="row1: circle, square, triangle; row2: filled-circle, filled-square, filled-triangle; row3: large-circle, large-square, ?; rule: test",
+                options=["A", "B", "C", "D", "E"],
+                correct_answer="A",
+                explanation="Test explanation"
+            )
+
+        generator.generate_puzzle = types.MethodType(fake_generate_puzzle, generator)
+        puzzles = generator.generate_puzzles(count=3, start_index=21)
+        assert [p.id for p in puzzles] == ["puzzle_021", "puzzle_022", "puzzle_023"]
+        print("✓ Puzzle ID sequencing works")
+    except Exception as e:
+        print(f"✗ Puzzle ID sequencing failed: {e}")
+        return False
+
     return True
 
 def test_renderer():
@@ -134,6 +172,7 @@ def main():
         ("Config", test_config),
         ("Asset Manager", test_asset_manager),
         ("Renderer", test_renderer),
+        ("Puzzle ID Sequencing", test_puzzle_id_sequencing),
     ]
     
     results = []
